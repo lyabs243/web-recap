@@ -116,7 +116,7 @@ class RecapWorkflowService:
 
     async def _generate_query(self, state: RecapState) -> RecapState:
         request = state["request"]
-        await self._progress(state, "query", "Generating a news-focused search query.")
+        await self._progress(state, "query", "generating_query")
         current_date = datetime.now().strftime("%Y-%m-%d")
         result = await self._query_chain.ainvoke(
             {
@@ -129,7 +129,7 @@ class RecapWorkflowService:
 
     async def _search_news(self, state: RecapState) -> RecapState:
         request = state["request"]
-        await self._progress(state, "search", "Searching Brave News.")
+        await self._progress(state, "search", "searching_news")
         references = await self._search_client.search_news(
             state["search_query"], request.language, request.max_results
         )
@@ -138,13 +138,13 @@ class RecapWorkflowService:
         await self._progress(
             state,
             "search",
-            f"Collected {len(references)} news links.",
-            payload={"links": [reference.url for reference in references]},
+            "search_success",
+            payload={"count": len(references)},
         )
         return {"references": references}
 
     async def _fetch_articles(self, state: RecapState) -> RecapState:
-        await self._progress(state, "scrape", "Reading and cleaning article pages.")
+        await self._progress(state, "scrape", "fetching_articles")
         semaphore = asyncio.Semaphore(2)
         request = state["request"]
 
@@ -154,16 +154,16 @@ class RecapWorkflowService:
                     await self._progress(
                         state,
                         "scrape",
-                        f"Opening {reference.source} in Playwright.",
-                        payload={"url": reference.url},
+                        "opening_article",
+                        payload={"source": reference.source, "url": reference.url},
                     )
                     article = await self._article_reader.read_article(reference)
                     if not article:
                         await self._progress(
                             state,
                             "scrape",
-                            f"Failed to read content from {reference.source}. Skipping.",
-                            payload={"url": reference.url},
+                            "article_failed",
+                            payload={"source": reference.source, "url": reference.url},
                         )
                         return None
 
@@ -173,8 +173,8 @@ class RecapWorkflowService:
                     await self._progress(
                         state,
                         "clean",
-                        f"Cleaned source text for {reference.source}.",
-                        payload={"url": reference.url},
+                        "cleaning_success",
+                        payload={"source": reference.source, "url": reference.url},
                     )
                     return SourceArticle(
                         url=article.url,
@@ -194,7 +194,7 @@ class RecapWorkflowService:
 
         if not sources:
             raise RuntimeError("Unable to read any article content")
-        await self._progress(state, "clean", f"Successfully prepared {len(sources)} article bodies.")
+        await self._progress(state, "clean", "fetching_complete", payload={"count": len(sources)})
         return {"sources": sources}
 
     async def _plan_sources(self, state: RecapState) -> RecapState:
@@ -204,8 +204,8 @@ class RecapWorkflowService:
             await self._progress(
                 state,
                 "source-plan",
-                f"Extracting article angle from {source.source}.",
-                payload={"url": source.url},
+                "analyzing_angle",
+                payload={"source": source.source, "url": source.url},
             )
             plan = await self._source_plan_chain.ainvoke(
                 {
@@ -222,7 +222,7 @@ class RecapWorkflowService:
 
     async def _plan_article(self, state: RecapState) -> RecapState:
         request = state["request"]
-        await self._progress(state, "outline", "Creating the recap outline.")
+        await self._progress(state, "outline", "creating_outline")
         evidence = "\n\n".join(
             f"Title: {plan.article_title}\nAngle: {plan.angle}\nPoints: {'; '.join(plan.key_points)}"
             for plan in state["source_plans"]
@@ -255,7 +255,7 @@ class RecapWorkflowService:
         )
         sections: list[GeneratedSection] = []
         for section in outline.sections:
-            await self._progress(state, "write", f"Writing section: {section.heading}")
+            await self._progress(state, "write", "writing_section", payload={"heading": section.heading})
             message = await self._section_chain.ainvoke(
                 {
                     "language": language_name(request.language),
@@ -283,7 +283,7 @@ class RecapWorkflowService:
             {
                 "type": "completed",
                 "stage": "done",
-                "message": "Recap article ready.",
+                "message": "recap_ready",
                 "payload": {
                     "result": {
                         "title": result.title,
