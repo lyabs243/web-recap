@@ -254,13 +254,11 @@ class RecapWorkflowService:
 
     async def _compose_result(self, state: RecapState) -> RecapState:
         outline = state["outline"]
-        body = [f"# {outline.title}", "", outline.intro, ""]
+        body = [f"# {outline.title}", outline.intro]
         for section in state["sections"]:
             body.append(section.markdown)
-            body.append("")
-        body.append("## Conclusion")
-        body.append(outline.conclusion)
-        markdown = "\n".join(body).strip()
+        body.append(f"## Conclusion\n\n{outline.conclusion}")
+        markdown = "\n\n".join(body).strip()
         result = RecapDocument(title=outline.title, markdown=markdown, references=state["references"])
         await self._jobs.append_event(
             state["job_id"],

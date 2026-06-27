@@ -14,7 +14,9 @@ Article text:
 
 ARTICLE_OUTLINE_SYSTEM_PROMPT = """
 You are planning a recap article synthesized from multiple news sources.
-Create a clear title, a short introduction objective, a section plan, and a conclusion objective.
+Create a clear title, a short introduction, a section plan, and a conclusion.
+The introduction and conclusion should be the final text, not just objectives.
+Do not repeat the article title in the introduction.
 """.strip()
 
 ARTICLE_OUTLINE_USER_PROMPT = """

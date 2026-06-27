@@ -16,5 +16,7 @@ Conclusion objective: {conclusion}
 Evidence:
 {evidence}
 
-Write only the section body in Markdown, starting with a level-2 heading.
+Write the section in Markdown, starting with a level-2 heading (##).
+Ensure to use multiple paragraphs with an empty line between them for readability.
+Do not include the article title.
 """.strip()

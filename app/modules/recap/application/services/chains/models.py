@@ -23,6 +23,6 @@ class OutlineSectionOutput(BaseModel):
 
 class ArticleOutlineOutput(BaseModel):
     title: str = Field(min_length=3, max_length=200)
-    intro: str = Field(min_length=10, max_length=240)
+    intro: str = Field(min_length=10, max_length=1000)
     sections: list[OutlineSectionOutput] = Field(min_length=2, max_length=6)
-    conclusion: str = Field(min_length=10, max_length=240)
+    conclusion: str = Field(min_length=10, max_length=1000)
