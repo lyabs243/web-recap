@@ -1,0 +1,19 @@
+{
+  "eyebrow": "Synthese d'actualites par IA",
+  "title": "Transformez l'actualite en un article de synthese unique.",
+  "subtitle": "Recherchez des articles recents, suivez le workflow en temps reel, puis consultez le recap final avec ses references.",
+  "language": "Langue",
+  "topicLabel": "Sujet",
+  "topicPlaceholder": "Exemple : decision de la BCE et reaction des marches",
+  "submit": "Generer le recap",
+  "submitting": "Demarrage du workflow...",
+  "articleEyebrow": "Article genere",
+  "articleEmptyTitle": "Aucun article pour le moment",
+  "articleEmpty": "Envoyez un sujet pour lancer la recherche Brave, la lecture Playwright, le nettoyage IA, le plan et la redaction des sections.",
+  "activityTitle": "Activite en direct",
+  "referencesTitle": "References",
+  "idleStatus": "En attente",
+  "doneStatus": "Pret",
+  "failedStatus": "Echec",
+  "genericError": "Impossible de lancer le job de recap."
+}

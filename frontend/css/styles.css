@@ -1,0 +1,23 @@
+:root {
+  color-scheme: dark;
+  --page-grid: rgba(245, 158, 11, 0.08);
+}
+
+body {
+  background-image:
+    linear-gradient(rgba(18, 18, 18, 0.85), rgba(18, 18, 18, 0.92)),
+    linear-gradient(var(--page-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--page-grid) 1px, transparent 1px);
+  background-size: auto, 24px 24px, 24px 24px;
+}
+
+.prose p,
+.prose li {
+  color: rgb(214 211 209);
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  color: rgb(250 250 249);
+}

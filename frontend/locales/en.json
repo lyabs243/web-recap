@@ -1,0 +1,19 @@
+{
+  "eyebrow": "AI news synthesis",
+  "title": "Turn live news coverage into a single recap article.",
+  "subtitle": "Search recent reporting, watch the workflow progress in real time, and review the final article with source references.",
+  "language": "Language",
+  "topicLabel": "Topic",
+  "topicPlaceholder": "Example: ECB rate decision and market reaction",
+  "submit": "Generate recap",
+  "submitting": "Launching workflow...",
+  "articleEyebrow": "Generated article",
+  "articleEmptyTitle": "No article yet",
+  "articleEmpty": "Submit a topic to start the Brave search, Playwright reading, AI cleaning, outlining, and section writing workflow.",
+  "activityTitle": "Live activity",
+  "referencesTitle": "References",
+  "idleStatus": "Idle",
+  "doneStatus": "Ready",
+  "failedStatus": "Failed",
+  "genericError": "Unable to start the recap job."
+}

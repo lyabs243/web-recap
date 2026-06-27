@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Recap</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="/frontend/js/config.js"></script>
+    <script defer src="/frontend/js/script.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="/frontend/css/styles.css" />
+  </head>
+  <body class="min-h-screen bg-stone-950 text-stone-100">
+    <div x-data="webRecapApp()" x-init="init()" class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <header class="mb-8 grid gap-6 rounded-[2rem] border border-stone-800 bg-[radial-gradient(circle_at_top_left,_rgba(245,158,11,0.28),_transparent_36%),linear-gradient(135deg,_rgba(28,25,23,1),_rgba(12,10,9,1))] p-8 shadow-2xl shadow-amber-500/10 lg:grid-cols-[1.4fr_0.8fr]">
+        <div>
+          <p class="mb-3 text-sm uppercase tracking-[0.35em] text-amber-300" x-text="t('eyebrow')"></p>
+          <h1 class="max-w-3xl text-4xl font-semibold tracking-tight text-stone-50 sm:text-5xl" x-text="t('title')"></h1>
+          <p class="mt-4 max-w-2xl text-base leading-7 text-stone-300" x-text="t('subtitle')"></p>
+        </div>
+        <div class="rounded-[1.5rem] border border-white/10 bg-black/20 p-5 backdrop-blur">
+          <div class="mb-4 flex items-center justify-between">
+            <span class="text-sm font-medium text-stone-200" x-text="t('language')"></span>
+            <div class="inline-flex rounded-full border border-white/10 bg-stone-900/80 p-1">
+              <button class="rounded-full px-3 py-1 text-sm" :class="language === 'en' ? 'bg-amber-300 text-stone-950' : 'text-stone-300'" @click="setLanguage('en')">EN</button>
+              <button class="rounded-full px-3 py-1 text-sm" :class="language === 'fr' ? 'bg-amber-300 text-stone-950' : 'text-stone-300'" @click="setLanguage('fr')">FR</button>
+            </div>
+          </div>
+          <label for="topic" class="mb-2 block text-sm font-medium text-stone-200" x-text="t('topicLabel')"></label>
+          <textarea id="topic" x-model="topic" rows="4" class="w-full rounded-2xl border border-white/10 bg-stone-950/80 px-4 py-3 text-sm text-stone-100 outline-none ring-0 placeholder:text-stone-500" :placeholder="t('topicPlaceholder')"></textarea>
+          <button @click="submit()" :disabled="isSubmitting" class="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-amber-300 px-4 py-3 text-sm font-semibold text-stone-950 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:bg-stone-600 disabled:text-stone-300">
+            <span x-show="!isSubmitting" x-text="t('submit')"></span>
+            <span x-show="isSubmitting" x-text="t('submitting')"></span>
+          </button>
+        </div>
+      </header>
+
+      <main class="grid gap-6 lg:grid-cols-[1.4fr_0.7fr]">
+        <section class="rounded-[2rem] border border-stone-800 bg-stone-900/80 p-6 shadow-xl shadow-black/20">
+          <div class="mb-6 flex items-center justify-between border-b border-stone-800 pb-4">
+            <div>
+              <p class="text-sm uppercase tracking-[0.3em] text-stone-500" x-text="t('articleEyebrow')"></p>
+              <h2 class="mt-2 text-2xl font-semibold text-stone-100" x-text="articleTitle || t('articleEmptyTitle')"></h2>
+            </div>
+            <span class="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300" x-text="statusLabel"></span>
+          </div>
+          <div x-show="!articleHtml" class="rounded-2xl border border-dashed border-stone-700 bg-stone-950/70 p-8 text-sm leading-7 text-stone-400" x-text="t('articleEmpty')"></div>
+          <article x-show="articleHtml" class="prose prose-invert prose-headings:font-semibold prose-a:text-amber-300 max-w-none" x-html="articleHtml"></article>
+        </section>
+
+        <aside class="space-y-6">
+          <section class="rounded-[2rem] border border-stone-800 bg-stone-900/80 p-6 shadow-xl shadow-black/20">
+            <div class="mb-4 flex items-center justify-between">
+              <h2 class="text-xl font-semibold text-stone-100" x-text="t('activityTitle')"></h2>
+              <span class="text-xs uppercase tracking-[0.3em] text-stone-500" x-text="events.length"></span>
+            </div>
+            <div class="space-y-3">
+              <template x-for="event in events" :key="event.timestamp + event.message">
+                <div class="rounded-2xl border border-white/5 bg-stone-950/70 p-3">
+                  <div class="flex items-center justify-between gap-3">
+                    <span class="text-xs uppercase tracking-[0.25em] text-amber-300" x-text="event.stage"></span>
+                    <span class="text-[11px] text-stone-500" x-text="formatTime(event.timestamp)"></span>
+                  </div>
+                  <p class="mt-2 text-sm leading-6 text-stone-300" x-text="event.message"></p>
+                </div>
+              </template>
+            </div>
+          </section>
+
+          <section class="rounded-[2rem] border border-stone-800 bg-stone-900/80 p-6 shadow-xl shadow-black/20">
+            <div class="mb-4 flex items-center justify-between">
+              <h2 class="text-xl font-semibold text-stone-100" x-text="t('referencesTitle')"></h2>
+              <span class="text-xs uppercase tracking-[0.3em] text-stone-500" x-text="references.length"></span>
+            </div>
+            <div class="space-y-4">
+              <template x-for="reference in references" :key="reference.url">
+                <a :href="reference.url" target="_blank" rel="noreferrer" class="block rounded-2xl border border-white/5 bg-stone-950/70 p-4 transition hover:border-amber-300/40 hover:bg-stone-950">
+                  <div class="flex items-start gap-3">
+                    <img :src="reference.favicon_url" alt="" class="mt-1 h-5 w-5 rounded-sm bg-white" />
+                    <div>
+                      <p class="text-sm font-medium text-stone-100" x-text="reference.title"></p>
+                      <p class="mt-1 text-xs uppercase tracking-[0.24em] text-stone-500" x-text="reference.source"></p>
+                      <p class="mt-2 text-sm leading-6 text-stone-400" x-text="reference.snippet"></p>
+                    </div>
+                  </div>
+                </a>
+              </template>
+            </div>
+          </section>
+        </aside>
+      </main>
+    </div>
+  </body>
+</html>
