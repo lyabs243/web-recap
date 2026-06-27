@@ -1,6 +1,7 @@
 import asyncio
+import logging
 from datetime import datetime
-from typing import Any, TypedDict
+from typing import Any, Optional, TypedDict
 
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.graph import END, START, StateGraph
@@ -32,6 +33,8 @@ from app.modules.recap.domain.entities.recap import (
 from app.modules.recap.infrastructure.llm.openai_factory import OpenAIModelFactory
 from app.modules.recap.infrastructure.scraping.playwright_reader import PlaywrightArticleReader
 from app.modules.recap.infrastructure.search.brave_client import BraveSearchClient
+
+logger = logging.getLogger(__name__)
 
 
 class RecapState(TypedDict, total=False):
@@ -145,38 +148,53 @@ class RecapWorkflowService:
         semaphore = asyncio.Semaphore(2)
         request = state["request"]
 
-        async def process_reference(reference: SearchReference) -> SourceArticle:
+        async def process_reference(reference: SearchReference) -> Optional[SourceArticle]:
             async with semaphore:
-                await self._progress(
-                    state,
-                    "scrape",
-                    f"Opening {reference.source} in Playwright.",
-                    payload={"url": reference.url},
-                )
-                article = await self._article_reader.read_article(reference)
-                cleaned = await self._clean_chain.ainvoke(
-                    {"title": article.extracted_title, "url": article.url, "text": article.cleaned_text}
-                )
-                await self._progress(
-                    state,
-                    "clean",
-                    f"Cleaned source text for {reference.source}.",
-                    payload={"url": reference.url},
-                )
-                return SourceArticle(
-                    url=article.url,
-                    search_title=article.search_title,
-                    extracted_title=cleaned.title,
-                    cleaned_text=trim_to_chars(cleaned.cleaned_text, 3000),
-                    snippet=article.snippet,
-                    favicon_url=article.favicon_url,
-                    source=article.source,
-                )
+                try:
+                    await self._progress(
+                        state,
+                        "scrape",
+                        f"Opening {reference.source} in Playwright.",
+                        payload={"url": reference.url},
+                    )
+                    article = await self._article_reader.read_article(reference)
+                    if not article:
+                        await self._progress(
+                            state,
+                            "scrape",
+                            f"Failed to read content from {reference.source}. Skipping.",
+                            payload={"url": reference.url},
+                        )
+                        return None
 
-        sources = await asyncio.gather(*(process_reference(reference) for reference in state["references"]))
+                    cleaned = await self._clean_chain.ainvoke(
+                        {"title": article.extracted_title, "url": article.url, "text": article.cleaned_text}
+                    )
+                    await self._progress(
+                        state,
+                        "clean",
+                        f"Cleaned source text for {reference.source}.",
+                        payload={"url": reference.url},
+                    )
+                    return SourceArticle(
+                        url=article.url,
+                        search_title=article.search_title,
+                        extracted_title=cleaned.title,
+                        cleaned_text=trim_to_chars(cleaned.cleaned_text, 3000),
+                        snippet=article.snippet,
+                        favicon_url=article.favicon_url,
+                        source=article.source,
+                    )
+                except Exception as e:
+                    logger.error(f"Error processing {reference.url}: {str(e)}")
+                    return None
+
+        results = await asyncio.gather(*(process_reference(reference) for reference in state["references"]))
+        sources = [s for s in results if s is not None]
+
         if not sources:
             raise RuntimeError("Unable to read any article content")
-        await self._progress(state, "clean", "Prepared article bodies for planning.")
+        await self._progress(state, "clean", f"Successfully prepared {len(sources)} article bodies.")
         return {"sources": sources}
 
     async def _plan_sources(self, state: RecapState) -> RecapState:
